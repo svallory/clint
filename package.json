@@ -1,0 +1,34 @@
+{
+  "name": "clint",
+  "version": "0.1.0",
+  "description": "Claude Code Command Center — calm, decisive, always in control",
+  "type": "module",
+  "bin": {
+    "clint": "./bin/run.js"
+  },
+  "oclif": {
+    "bin": "clint",
+    "dirname": "clint",
+    "commands": {
+      "strategy": "pattern",
+      "target": "./dist/commands"
+    },
+    "topicSeparator": " "
+  },
+  "scripts": {
+    "dev": "bun ./bin/dev.ts",
+    "build": "tsc",
+    "docs:dev": "bunx docmd dev --config ./docmd.config.cjs",
+    "docs:build": "bunx docmd build --config ./docmd.config.cjs",
+    "test": "bun test"
+  },
+  "dependencies": {
+    "@oclif/core": "^4",
+    "smol-toml": "^1"
+  },
+  "devDependencies": {
+    "@docmd/core": "^0.6.2",
+    "@types/bun": "latest",
+    "typescript": "^5"
+  }
+}
