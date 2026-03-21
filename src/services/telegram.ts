@@ -10,7 +10,8 @@ export interface TelegramEnv {
 
 const TELEGRAM_STATE_ROOT = resolve(homedir(), '.config/clint/telegram-state')
 
-export function getHqTelegramEnv(config: ClintConfig): TelegramEnv {
+export function getHqTelegramEnv(config: ClintConfig): TelegramEnv | null {
+  if (!config.telegram.hq_bot_token) return null
   const stateDir = resolve(TELEGRAM_STATE_ROOT, 'hq')
   mkdirSync(stateDir, {recursive: true})
   return {

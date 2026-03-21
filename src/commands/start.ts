@@ -1,7 +1,7 @@
 import {Command, Flags} from '@oclif/core'
 import {mkdirSync} from 'node:fs'
 import {resolve} from 'node:path'
-import {loadConfig} from '../config/index.js'
+import {runSetupIfNeeded} from '../config/setup.js'
 import {buildClaudeCommand} from '../services/claude.js'
 import {getHqTelegramEnv} from '../services/telegram.js'
 import * as tmux from '../services/tmux.js'
@@ -34,7 +34,7 @@ export default class Start extends Command {
 
   async run(): Promise<void> {
     const {flags} = await this.parse(Start)
-    const config = loadConfig({requireTelegram: true})
+    const config = await runSetupIfNeeded()
 
     const sessionName = flags.name ?? config.hq.name
     const spawnMode = flags['spawn-mode'] ?? config.hq.spawn_mode
@@ -48,7 +48,10 @@ export default class Start extends Command {
 
     mkdirSync(LOG_DIR, {recursive: true})
 
-    const telegramEnv = getHqTelegramEnv(config)
+    const telegramEnv = config.telegram.hq_bot_token
+      ? getHqTelegramEnv(config)
+      : null
+
     const logFile = resolve(LOG_DIR, `${sessionName}.log`)
 
     const command = buildClaudeCommand({
@@ -56,8 +59,8 @@ export default class Start extends Command {
       spawnMode,
       capacity,
       permissionMode,
-      telegramBotToken: telegramEnv.TELEGRAM_BOT_TOKEN,
-      telegramStateDir: telegramEnv.TELEGRAM_STATE_DIR,
+      telegramBotToken: telegramEnv?.TELEGRAM_BOT_TOKEN,
+      telegramStateDir: telegramEnv?.TELEGRAM_STATE_DIR,
       logFile,
     })
 
@@ -65,6 +68,11 @@ export default class Start extends Command {
 
     log(`Starting Clint HQ session: ${sessionName}`)
     log(`Working directory: ${cwd}`)
+    if (telegramEnv) {
+      log('Telegram: enabled')
+    } else {
+      log('Telegram: disabled (no bot token configured)')
+    }
 
     tmux.createSession({name: sessionName, cwd, command})
 
@@ -73,6 +81,8 @@ export default class Start extends Command {
     log(`  Web:      claude.ai/code → find session '${sessionName}'`)
     log('  Terminal: clint attach')
     log(`  QR code:  tmux attach -t ${sessionName}`)
-    log('  Telegram: Message your HQ bot')
+    if (telegramEnv) {
+      log('  Telegram: Message your HQ bot')
+    }
   }
 }

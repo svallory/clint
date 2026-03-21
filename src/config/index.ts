@@ -24,7 +24,11 @@ function deepMerge<T extends Record<string, unknown>>(base: T, override: Record<
   return result as T
 }
 
-export function loadConfig(opts?: {requireTelegram?: boolean}): ClintConfig {
+export function configExists(): boolean {
+  return existsSync(CONFIG_PATH)
+}
+
+export function loadConfig(): ClintConfig {
   let fileConfig: Record<string, unknown> = {}
 
   if (existsSync(CONFIG_PATH)) {
@@ -45,16 +49,6 @@ export function loadConfig(opts?: {requireTelegram?: boolean}): ClintConfig {
 
   // Expand paths
   merged.projects_root = expandHome(merged.projects_root)
-
-  // Validate required fields
-  if (opts?.requireTelegram && !merged.telegram?.hq_bot_token) {
-    throw new Error(
-      'Telegram HQ bot token is required.\n' +
-      `Set it in ${CONFIG_PATH} under [telegram] hq_bot_token = "..." ` +
-      'or via CLINT_HQ_BOT_TOKEN env var.\n' +
-      'Create a bot via @BotFather on Telegram to get a token.',
-    )
-  }
 
   return merged
 }

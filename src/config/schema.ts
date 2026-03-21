@@ -9,7 +9,7 @@ export interface ClaudeConfig {
 }
 
 export interface TelegramConfig {
-  hq_bot_token: string
+  hq_bot_token?: string
   project_bots: Record<string, string>
 }
 
@@ -25,7 +25,7 @@ export interface ClintConfig {
   projects: Record<string, ProjectOverride>
 }
 
-export const DEFAULT_CONFIG: Omit<ClintConfig, 'telegram'> & { telegram: Partial<TelegramConfig> } = {
+export const DEFAULT_CONFIG: ClintConfig = {
   projects_root: '~/work',
   hq: {
     name: 'clint-hq',

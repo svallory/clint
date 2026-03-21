@@ -5,6 +5,7 @@
     "": {
       "name": "clint",
       "dependencies": {
+        "@clack/prompts": "^1.1.0",
         "@oclif/core": "^4",
         "smol-toml": "^1",
       },
@@ -98,6 +99,10 @@
     "@aws-sdk/xml-builder": ["@aws-sdk/xml-builder@3.972.15", "", { "dependencies": { "@smithy/types": "^4.13.1", "fast-xml-parser": "5.5.8", "tslib": "^2.6.2" } }, "sha512-PxMRlCFNiQnke9YR29vjFQwz4jq+6Q04rOVFeTDR2K7Qpv9h9FOWOxG+zJjageimYbWqE3bTuLjmryWHAWbvaA=="],
 
     "@aws/lambda-invoke-store": ["@aws/lambda-invoke-store@0.2.4", "", {}, "sha512-iY8yvjE0y651BixKNPgmv1WrQc+GZ142sb0z4gYnChDDY2YqI4P/jsSopBWrKfAt7LOJAkOXt7rC/hms+WclQQ=="],
+
+    "@clack/core": ["@clack/core@1.1.0", "", { "dependencies": { "sisteransi": "^1.0.5" } }, "sha512-SVcm4Dqm2ukn64/8Gub2wnlA5nS2iWJyCkdNHcvNHPIeBTGojpdJ+9cZKwLfmqy7irD4N5qLteSilJlE0WLAtA=="],
+
+    "@clack/prompts": ["@clack/prompts@1.1.0", "", { "dependencies": { "@clack/core": "1.1.0", "sisteransi": "^1.0.5" } }, "sha512-pkqbPGtohJAvm4Dphs2M8xE29ggupihHdy1x84HNojZuMtFsHiUlRvqD24tM2+XmI+61LlfNceM3Wr7U5QES5g=="],
 
     "@docmd/core": ["@docmd/core@0.6.2", "", { "dependencies": { "@docmd/live": "^0.6.2", "@docmd/parser": "^0.6.2", "@docmd/plugin-analytics": "^0.6.2", "@docmd/plugin-installer": "^0.6.2", "@docmd/plugin-llms": "^0.6.2", "@docmd/plugin-mermaid": "^0.6.2", "@docmd/plugin-pwa": "^0.6.2", "@docmd/plugin-search": "^0.6.2", "@docmd/plugin-seo": "^0.6.2", "@docmd/plugin-sitemap": "^0.6.2", "@docmd/themes": "^0.6.2", "@docmd/ui": "^0.6.2", "chalk": "^4.1.2", "chokidar": "^3.6.0", "commander": "^11.1.0", "esbuild": "^0.27.4", "ws": "^8.19.0" }, "bin": { "docmd": "dist/bin/docmd.js" } }, "sha512-drJXk1rp/zihWn8JKettNG1GlTctL5sdnEd95Y3auCKzJk+vof68BrBF40tShS8ZO6oVWLfBvR/lxmJWnUT1uQ=="],
 
@@ -628,6 +633,8 @@
     "sentence-case": ["sentence-case@3.0.4", "", { "dependencies": { "no-case": "^3.0.4", "tslib": "^2.0.3", "upper-case-first": "^2.0.2" } }, "sha512-8LS0JInaQMCRoQ7YUytAo/xUu5W2XnQxV2HI/6uM6U7CITS1RqPElr30V6uIqyMKM9lJGRVFy5/4CuzcixNYSg=="],
 
     "signal-exit": ["signal-exit@4.1.0", "", {}, "sha512-bzyZ1e88w9O1iNJbKnOlvYTrWPDl46O1bG0D3XInv+9tkPrxrN8jUUTiFlDkkmKWgn1M6CfIA13SuGqOa9Korw=="],
+
+    "sisteransi": ["sisteransi@1.0.5", "", {}, "sha512-bLGGlR1QxBcynn2d5YmDX4MGjlZvy2MRBDRNHLJ8VI6l6+9FUiyTFNJ0IveOSP0bcXgVDPRcfGqA0pjaqUpfVg=="],
 
     "smol-toml": ["smol-toml@1.6.0", "", {}, "sha512-4zemZi0HvTnYwLfrpk/CF9LOd9Lt87kAt50GnqhMpyF9U3poDAP2+iukq2bZsO/ufegbYehBkqINbsWxj4l4cw=="],
 
