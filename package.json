@@ -1,6 +1,6 @@
 {
   "name": "@svallory/clint",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Claude Code Command Center — calm, decisive, always in control",
   "type": "module",
   "license": "MIT",
@@ -11,6 +11,10 @@
     "url": "https://github.com/svallory/clint.git"
   },
   "bugs": "https://github.com/svallory/clint/issues",
+  "publishConfig": {
+    "registry": "https://registry.npmjs.org",
+    "access": "public"
+  },
   "keywords": [
     "claude",
     "claude-code",
