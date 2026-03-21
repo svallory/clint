@@ -50,7 +50,7 @@ projects_root = "~/work"
 hq_bot_token = "YOUR_BOT_TOKEN_HERE"
 ```
 
-See [Configuration](https://svallory.github.io/clint/configuration) for all options.
+See [Configuration](https://clint.saulo.engineer/configuration) for all options.
 
 ### Run
 
@@ -107,7 +107,7 @@ another-project = "789:CCC..."
 
 3. Message your HQ bot to tell Clint to spawn sessions, check status, or coordinate work
 
-See [Telegram Setup](https://svallory.github.io/clint/telegram) for the full guide.
+See [Telegram Setup](https://clint.saulo.engineer/telegram) for the full guide.
 
 ## How It Works
 
@@ -127,7 +127,7 @@ Each session is a `claude remote-control` process running inside a tmux session.
 
 ## Documentation
 
-Full documentation is available at **[svallory.github.io/clint](https://svallory.github.io/clint)**.
+Full documentation is available at **[clint.saulo.engineer](https://clint.saulo.engineer)**.
 
 ## Development
 

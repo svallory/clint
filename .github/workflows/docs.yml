@@ -32,6 +32,8 @@ jobs:
 
       - run: bun run docs:build
 
+      - run: echo "clint.saulo.engineer" > site/CNAME
+
       - uses: actions/upload-pages-artifact@v3
         with:
           path: site

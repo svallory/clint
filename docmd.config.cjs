@@ -2,7 +2,7 @@ const { defineConfig } = require('@docmd/core');
 
 module.exports = defineConfig({
   title: 'Clint',
-  url: 'https://svallory.github.io/clint',
+  url: 'https://clint.saulo.engineer',
   src: 'docs',
   out: 'site',
 
