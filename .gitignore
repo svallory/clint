@@ -5,3 +5,4 @@ logs/
 *.log
 .claude/
 .DS_Store
+oclif.manifest.json

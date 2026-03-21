@@ -1,11 +1,36 @@
 {
-  "name": "clint",
+  "name": "@svallory/clint",
   "version": "0.1.0",
   "description": "Claude Code Command Center — calm, decisive, always in control",
   "type": "module",
+  "license": "MIT",
+  "author": "Saulo Vallory",
+  "homepage": "https://clint.saulo.engineer",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/svallory/clint.git"
+  },
+  "bugs": "https://github.com/svallory/clint/issues",
+  "keywords": [
+    "claude",
+    "claude-code",
+    "cli",
+    "remote-control",
+    "telegram",
+    "tmux",
+    "worktree",
+    "ai",
+    "anthropic"
+  ],
   "bin": {
     "clint": "./bin/run.js"
   },
+  "files": [
+    "bin",
+    "dist",
+    "CLAUDE.md",
+    "oclif.manifest.json"
+  ],
   "oclif": {
     "bin": "clint",
     "dirname": "clint",
@@ -18,6 +43,8 @@
   "scripts": {
     "dev": "bun ./bin/dev.ts",
     "build": "tsc",
+    "postbuild": "bunx oclif manifest",
+    "prepublishOnly": "bun run build",
     "docs:dev": "bunx docmd dev --config ./docmd.config.cjs",
     "docs:build": "bunx docmd build --config ./docmd.config.cjs",
     "test": "bun test"
@@ -29,6 +56,7 @@
   "devDependencies": {
     "@docmd/core": "^0.6.2",
     "@types/bun": "latest",
+    "oclif": "^4",
     "typescript": "^5"
   }
 }

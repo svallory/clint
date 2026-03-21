@@ -18,7 +18,7 @@ Named after Clint Eastwood. You tell it what to do. It gets it done.
 
 ### Prerequisites
 
-- [Bun](https://bun.sh) runtime
+- [Node.js](https://nodejs.org) 18+ or [Bun](https://bun.sh)
 - [Claude Code](https://docs.anthropic.com/en/docs/claude-code) CLI (`claude`) with a Pro/Max/Team/Enterprise subscription
 - [tmux](https://github.com/tmux/tmux) for session persistence
 - [Remote Control](https://code.claude.com/docs/en/remote-control) enabled on your account
@@ -27,16 +27,15 @@ Named after Clint Eastwood. You tell it what to do. It gets it done.
 ### Install
 
 ```bash
-git clone https://github.com/svallory/clint.git ~/work/clint
-cd ~/work/clint
-bun install
+# With npm
+npm install -g @svallory/clint
 
-# Symlink for global access
-mkdir -p ~/.local/bin
-ln -sf ~/work/clint/bin/dev.ts ~/.local/bin/clint
+# With bun
+bun install -g @svallory/clint
 
-# Make sure ~/.local/bin is in your PATH
-echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.zshrc
+# Or run directly without installing
+npx @svallory/clint --help
+bunx @svallory/clint --help
 ```
 
 ### Configure
@@ -50,7 +49,7 @@ projects_root = "~/work"
 hq_bot_token = "YOUR_BOT_TOKEN_HERE"
 ```
 
-See [Configuration](https://clint.saulo.engineer/configuration) for all options.
+See [Configuration](https://clint.saulo.engineer/getting-started/configuration) for all options.
 
 ### Run
 
@@ -107,7 +106,7 @@ another-project = "789:CCC..."
 
 3. Message your HQ bot to tell Clint to spawn sessions, check status, or coordinate work
 
-See [Telegram Setup](https://clint.saulo.engineer/telegram) for the full guide.
+See [Telegram Setup](https://clint.saulo.engineer/guides/telegram) for the full guide.
 
 ## How It Works
 
@@ -132,6 +131,10 @@ Full documentation is available at **[clint.saulo.engineer](https://clint.saulo.
 ## Development
 
 ```bash
+git clone https://github.com/svallory/clint.git
+cd clint
+bun install
+
 # Run commands in dev mode
 bun run dev -- list
 bun run dev -- start

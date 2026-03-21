@@ -5,7 +5,7 @@ import {loadConfig} from '../config/index.js'
 import {buildClaudeCommand} from '../services/claude.js'
 import {getHqTelegramEnv} from '../services/telegram.js'
 import * as tmux from '../services/tmux.js'
-import {CLINT_DIR, LOG_DIR} from '../utils/paths.js'
+import {LOG_DIR} from '../utils/paths.js'
 import {log} from '../utils/log.js'
 
 export default class Start extends Command {
@@ -61,10 +61,12 @@ export default class Start extends Command {
       logFile,
     })
 
-    log(`Starting Clint HQ session: ${sessionName}`)
-    log(`Working directory: ${CLINT_DIR}`)
+    const cwd = config.projects_root
 
-    tmux.createSession({name: sessionName, cwd: CLINT_DIR, command})
+    log(`Starting Clint HQ session: ${sessionName}`)
+    log(`Working directory: ${cwd}`)
+
+    tmux.createSession({name: sessionName, cwd, command})
 
     log('')
     log('Session started. Connect via:')

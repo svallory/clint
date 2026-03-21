@@ -36,8 +36,7 @@ The **HQ session** is Clint itself. It coordinates everything: spawning new sess
 
 ```bash
 # Install
-git clone https://github.com/svallory/clint.git ~/work/clint
-cd ~/work/clint && bun install
+npm install -g @svallory/clint
 
 # Configure
 mkdir -p ~/.config/clint
@@ -49,7 +48,7 @@ hq_bot_token = "YOUR_TOKEN_HERE"
 EOF
 
 # Run
-bun run dev -- start
+clint start
 ```
 
 Read the full [Installation Guide](/getting-started/installation) to get started.

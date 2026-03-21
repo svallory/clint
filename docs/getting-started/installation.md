@@ -6,7 +6,7 @@ Before installing Clint, make sure you have:
 
 | Dependency | Version | Purpose |
 |-----------|---------|---------|
-| [Bun](https://bun.sh) | 1.0+ | JavaScript runtime and package manager |
+| [Node.js](https://nodejs.org) or [Bun](https://bun.sh) | Node 18+ / Bun 1.0+ | JavaScript runtime |
 | [Claude Code](https://docs.anthropic.com/en/docs/claude-code) | 2.1.51+ | The CLI being managed |
 | [tmux](https://github.com/tmux/tmux) | 3.0+ | Session persistence |
 | A Claude subscription | Pro/Max/Team/Enterprise | Required for Remote Control |
@@ -18,33 +18,42 @@ Before installing Clint, make sure you have:
 | [Worktrunk](https://github.com/nicholasgasior/worktrunk) (`wt`) | Git worktree management |
 | A Telegram bot token | Telegram channel integration |
 
-## Install Clint
+## Install from npm
 
 ```bash
-git clone https://github.com/svallory/clint.git ~/work/clint
-cd ~/work/clint
+# Global install (recommended)
+npm install -g @svallory/clint
+
+# Or with bun
+bun install -g @svallory/clint
+```
+
+After installing, `clint` is available globally:
+
+```bash
+clint --help
+```
+
+### Run without installing
+
+You can also use `npx` or `bunx` to run Clint without a global install:
+
+```bash
+npx @svallory/clint list
+bunx @svallory/clint start
+```
+
+## Install from Source
+
+For development or to use the latest unreleased changes:
+
+```bash
+git clone https://github.com/svallory/clint.git
+cd clint
 bun install
-```
 
-## Add to PATH
-
-Create a symlink so `clint` is available globally:
-
-```bash
-mkdir -p ~/.local/bin
-ln -sf ~/work/clint/bin/dev.ts ~/.local/bin/clint
-```
-
-Add `~/.local/bin` to your PATH if it isn't already:
-
-```bash
-# For zsh (macOS default)
-echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.zshrc
-source ~/.zshrc
-
-# For bash
-echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.bashrc
-source ~/.bashrc
+# Run in dev mode
+bun run dev -- --help
 ```
 
 ## Verify
