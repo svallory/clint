@@ -76,6 +76,20 @@ export default class Start extends Command {
 
     tmux.createSession({name: sessionName, cwd, command})
 
+    // Verify the session actually survived startup
+    if (tmux.waitAndVerify(sessionName) === 'dead') {
+      this.error(
+        `Session '${sessionName}' exited immediately after starting.\n` +
+        `Check the log for details: ${logFile}\n\n` +
+        'Common causes:\n' +
+        '  - Remote Control is not enabled on your account\n' +
+        '  - Claude CLI is not authenticated (run: claude auth login)\n' +
+        '  - The claude command is not found (check your PATH)',
+      )
+    }
+    // Session survived — disable remain-on-exit so panes clean up normally
+    tmux.disableRemainOnExit(sessionName)
+
     log('')
     log('Session started. Connect via:')
     log(`  Web:      claude.ai/code → find session '${sessionName}'`)

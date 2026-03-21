@@ -21,15 +21,48 @@ export function sessionExists(name: string): boolean {
 }
 
 export function createSession(opts: {name: string; cwd: string; command: string}): void {
+  // Use remain-on-exit so the pane stays around if the command fails,
+  // allowing us to read the exit status and show a useful error.
   const result = run([
     'new-session', '-d',
     '-s', opts.name,
     '-c', opts.cwd,
+    '-e', 'CLINT_SESSION=1',
     opts.command,
   ])
   if (!result.ok) {
     throw new Error(`Failed to create tmux session '${opts.name}': ${result.stderr}`)
   }
+  // Keep the pane alive after the command exits so we can detect failures
+  run(['set-option', '-t', opts.name, 'remain-on-exit', 'on'])
+}
+
+/**
+ * Wait and verify a session's command is still running.
+ * Polls for up to `timeoutMs`, checking every 500ms.
+ * Returns `'running'` if alive, `'dead'` if the pane's command exited.
+ */
+export function waitAndVerify(name: string, timeoutMs = 5000): 'running' | 'dead' {
+  const start = Date.now()
+  while (Date.now() - start < timeoutMs) {
+    spawnSync('sleep', ['0.5'])
+
+    // Check if session still exists at all
+    if (!sessionExists(name)) return 'dead'
+
+    // Check if the pane process is still running
+    const paneResult = run([
+      'list-panes', '-t', name,
+      '-F', '#{pane_dead}',
+    ])
+    if (paneResult.ok && paneResult.stdout.trim() === '1') {
+      // Pane is dead — command exited. Clean up the session.
+      killSession(name)
+      return 'dead'
+    }
+  }
+
+  return 'running'
 }
 
 export function killSession(name: string): boolean {
@@ -53,6 +86,10 @@ export function listSessions(prefix = 'clint'): TmuxSession[] {
         attached: attached === '1',
       }
     })
+}
+
+export function disableRemainOnExit(name: string): void {
+  run(['set-option', '-t', name, 'remain-on-exit', 'off'])
 }
 
 export function attachSession(name: string): never {

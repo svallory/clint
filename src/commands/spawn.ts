@@ -92,6 +92,18 @@ export default class Spawn extends Command {
 
     tmux.createSession({name: sessionName, cwd: workDir, command})
 
+    if (tmux.waitAndVerify(sessionName) === 'dead') {
+      this.error(
+        `Session '${sessionName}' exited immediately after starting.\n` +
+        `Check the log for details: ${logFile}\n\n` +
+        'Common causes:\n' +
+        '  - Remote Control is not enabled on your account\n' +
+        '  - Claude CLI is not authenticated (run: claude auth login)\n' +
+        '  - The claude command is not found (check your PATH)',
+      )
+    }
+    tmux.disableRemainOnExit(sessionName)
+
     log('')
     log(`Session '${sessionName}' started`)
     log('Connect via:')
