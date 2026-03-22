@@ -1,6 +1,5 @@
 import {Command, Flags} from '@oclif/core'
-import {existsSync, mkdirSync, readFileSync} from 'node:fs'
-import {homedir} from 'node:os'
+import {mkdirSync, readFileSync} from 'node:fs'
 import {resolve} from 'node:path'
 import {runSetupIfNeeded} from '../config/setup.js'
 import {buildClaudeCommand} from '../services/claude.js'
@@ -8,6 +7,7 @@ import {getHqTelegramEnv} from '../services/telegram.js'
 import * as tmux from '../services/tmux.js'
 import {LOG_DIR} from '../utils/paths.js'
 import {log} from '../utils/log.js'
+import {isWorkspaceTrusted, trustWorkspace} from '../utils/trust.js'
 
 export default class Start extends Command {
   static override description = 'Start the Clint HQ session'
@@ -42,18 +42,10 @@ export default class Start extends Command {
     const capacity = flags.capacity ?? config.hq.capacity
     const permissionMode = flags['permission-mode'] ?? config.claude.permission_mode
 
-    // Check workspace trust
-    const encoded = config.projects_root.replace(/\//g, '-')
-    const trustedDir = resolve(homedir(), '.claude/projects', encoded)
-    if (!existsSync(trustedDir)) {
-      this.error(
-        `Workspace not trusted by Claude Code: ${config.projects_root}\n\n` +
-        'Claude Code requires you to trust a directory before it can run there.\n' +
-        'Run this once to trust it:\n\n' +
-        `  cd ${config.projects_root} && claude\n\n` +
-        'Accept the trust dialog, then exit (Ctrl+C) and run clint start again.\n' +
-        'Or re-run setup to pick a different directory: rm ~/.config/clint/config.toml && clint start',
-      )
+    // Ensure workspace trust
+    if (!isWorkspaceTrusted(config.projects_root)) {
+      trustWorkspace(config.projects_root)
+      log(`Trusted ${config.projects_root} for Claude Code.`)
     }
 
     if (tmux.sessionExists(sessionName)) {

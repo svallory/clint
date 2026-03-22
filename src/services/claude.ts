@@ -11,6 +11,9 @@ export interface ClaudeCommandOpts {
 export function buildClaudeCommand(opts: ClaudeCommandOpts): string {
   const parts: string[] = []
 
+  // CLAUDE_CODE_OAUTH_TOKEN breaks remote-control — it must use interactive auth
+  parts.push('unset CLAUDE_CODE_OAUTH_TOKEN;')
+
   // Environment variables for Telegram
   if (opts.telegramBotToken) {
     parts.push(`TELEGRAM_BOT_TOKEN='${opts.telegramBotToken}'`)
