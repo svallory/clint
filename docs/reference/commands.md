@@ -15,7 +15,9 @@ FLAGS
   --capacity=<N>             Max concurrent sessions (default: 32)
 ```
 
-Launches a `claude remote-control` server in a tmux session with Telegram channels enabled. Requires `telegram.hq_bot_token` in config.
+Launches a `claude remote-control` server in a tmux session. Telegram channels are enabled if a bot token is configured. On first run, an interactive setup wizard guides you through configuration.
+
+On successful start, displays a welcome banner with config summary, project count, connection URL, and key commands. If `clint` is not installed globally (running via `bunx`), shows a warning suggesting global install.
 
 **Examples:**
 ```bash
@@ -177,4 +179,46 @@ Attaches your terminal to the tmux session. Useful for seeing the initial QR cod
 ```bash
 clint attach              # Attach to HQ
 clint attach my-project   # Attach to clint-my-project
+```
+
+---
+
+## `clint config`
+
+Show Clint configuration.
+
+```
+USAGE
+  $ clint config [FLAGS]
+
+FLAGS
+  --json    Output as JSON
+  --path    Print config file path only
+```
+
+Displays the current configuration including projects root, HQ settings, Telegram status, and project bot/group counts. Also shows the config file path and a link to the documentation.
+
+**Examples:**
+```bash
+clint config                           # Show config summary
+clint config --json                    # Output as JSON
+clint config --path                    # Just print the file path
+$EDITOR $(clint config --path)         # Open config in your editor
+```
+
+**Output:**
+```
+Config file: ~/.config/clint/config.toml
+
+  projects_root     ~/work
+  hq.name           clint-hq
+  hq.spawn_mode     same-dir
+  hq.capacity       32
+  claude.mode       default
+  telegram          disabled
+  project bots      none
+  project groups    none
+
+Edit: ~/.config/clint/config.toml
+Docs: https://clint.saulo.engineer/getting-started/configuration
 ```

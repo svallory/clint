@@ -2,7 +2,17 @@
 
 Clint uses a TOML configuration file at `~/.config/clint/config.toml`.
 
+You can view your current configuration at any time:
+
+```bash
+clint config              # Show config summary
+clint config --path       # Print config file path
+clint config --json       # Output as JSON
+```
+
 ## Create the Config
+
+On first run, `clint start` launches an interactive setup wizard that creates this file for you. To create it manually:
 
 ```bash
 mkdir -p ~/.config/clint

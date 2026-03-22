@@ -8,18 +8,34 @@ Once you've [installed](/getting-started/installation) Clint and [configured](/g
 clint start
 ```
 
-This creates a tmux session running `claude remote-control` with Telegram channels enabled. You'll see:
+This creates a tmux session running `claude remote-control`. If Telegram is configured, channels are enabled automatically. On first run, an interactive setup wizard walks you through configuration.
+
+After the session starts, you'll see a welcome banner:
 
 ```
-[2026-03-21 14:00:00] Starting Clint HQ session: clint-hq
-[2026-03-21 14:00:00] Working directory: /Users/you/work/clint
-[2026-03-21 14:00:00]
-[2026-03-21 14:00:00] Session started. Connect via:
-[2026-03-21 14:00:00]   Web:      claude.ai/code → find session 'clint-hq'
-[2026-03-21 14:00:00]   Terminal: clint attach
-[2026-03-21 14:00:00]   QR code:  tmux attach -t clint-hq
-[2026-03-21 14:00:00]   Telegram: Message your HQ bot
+╔═══════════════════════════════════════════════════════════════════╗
+║  Clint HQ — Claude Code Command Center                          ║
+╠═══════════════════════════════════════════════════════════════════╣
+║                                                                   ║
+║  Config:    ~/.config/clint/config.toml                           ║
+║  Projects:  ~/work (4 found)                                      ║
+║  Telegram:  disabled                                              ║
+║                                                                   ║
+║  Session:   clint-hq                                              ║
+║  Connect:   https://claude.ai/code?bridge=env_01ABC...            ║
+║                                                                   ║
+║  Commands:                                                        ║
+║    clint list            List projects                            ║
+║    clint spawn <name>    Start project session                    ║
+║    clint status          Show running sessions                    ║
+║    clint attach          Attach to HQ terminal                    ║
+║    clint config          Show configuration                       ║
+║    clint stop-all        Stop everything                          ║
+║                                                                   ║
+╚═══════════════════════════════════════════════════════════════════╝
 ```
+
+The **Connect** URL is a direct link to your session — click it or paste it in your browser.
 
 ## Connect from claude.ai/code
 

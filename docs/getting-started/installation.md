@@ -20,6 +20,8 @@ Before installing Clint, make sure you have:
 
 ## Install from npm
 
+A global install is **strongly recommended**. The Clint HQ session (a Claude Code instance) needs to run `clint spawn`, `clint list`, etc. — these only work if `clint` is on your PATH.
+
 ```bash
 # Global install (recommended)
 npm install -g @svallory/clint
@@ -34,14 +36,16 @@ After installing, `clint` is available globally:
 clint --help
 ```
 
-### Run without installing
+### Try without installing
 
-You can also use `npx` or `bunx` to run Clint without a global install:
+You can use `npx` or `bunx` to try Clint without a global install:
 
 ```bash
 npx @svallory/clint list
 bunx @svallory/clint start
 ```
+
+> **Note:** When running via `bunx`/`npx`, the HQ Claude session won't be able to run `clint` commands (it's not on PATH). Clint will warn you about this and suggest a global install.
 
 ## Install from Source
 
@@ -72,6 +76,7 @@ USAGE
 
 COMMANDS
   attach    Attach to a Clint tmux session
+  config    Show Clint configuration
   list      List available projects and their worktrees
   spawn     Spawn a new Claude session for a project
   start     Start the Clint HQ session
