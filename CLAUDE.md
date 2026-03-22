@@ -33,6 +33,8 @@ clint stop <project>                         # Stop a session
 clint stop-all                               # Stop everything
 clint list                                   # List all projects and worktrees
 clint list --json                            # JSON output for parsing
+clint config                                 # Show current configuration
+clint config --json                          # Config as JSON
 ```
 
 ## Handling Telegram Requests

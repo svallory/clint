@@ -1,6 +1,8 @@
 import {Command, Flags} from '@oclif/core'
 import {mkdirSync, readFileSync} from 'node:fs'
 import {resolve} from 'node:path'
+import {spawnSync} from 'node:child_process'
+import * as p from '@clack/prompts'
 import {runSetupIfNeeded} from '../config/setup.js'
 import {buildClaudeCommand} from '../services/claude.js'
 import {getHqTelegramEnv} from '../services/telegram.js'
@@ -8,6 +10,12 @@ import * as tmux from '../services/tmux.js'
 import {LOG_DIR} from '../utils/paths.js'
 import {log} from '../utils/log.js'
 import {isWorkspaceTrusted, trustWorkspace} from '../utils/trust.js'
+import {renderBanner} from '../utils/banner.js'
+
+function isClintOnPath(): boolean {
+  const result = spawnSync('which', ['clint'], {encoding: 'utf-8'})
+  return result.status === 0
+}
 
 export default class Start extends Command {
   static override description = 'Start the Clint HQ session'
@@ -42,6 +50,16 @@ export default class Start extends Command {
     const capacity = flags.capacity ?? config.hq.capacity
     const permissionMode = flags['permission-mode'] ?? config.claude.permission_mode
 
+    // Suggest global install if not on PATH
+    if (!isClintOnPath()) {
+      p.log.warning(
+        'Clint is not installed globally. The HQ session won\'t be able to run clint commands.\n' +
+        '  Install globally:\n\n' +
+        '    npm install -g @svallory/clint\n' +
+        '    # or: bun install -g @svallory/clint\n',
+      )
+    }
+
     // Ensure workspace trust
     if (!isWorkspaceTrusted(config.projects_root)) {
       trustWorkspace(config.projects_root)
@@ -74,18 +92,11 @@ export default class Start extends Command {
     const cwd = config.projects_root
 
     log(`Starting Clint HQ session: ${sessionName}`)
-    log(`Working directory: ${cwd}`)
-    if (telegramEnv) {
-      log('Telegram: enabled')
-    } else {
-      log('Telegram: disabled (no bot token configured)')
-    }
 
     tmux.createSession({name: sessionName, cwd, command})
 
     // Verify the session actually survived startup
     if (tmux.waitAndVerify(sessionName) === 'dead') {
-      // Try to extract the actual error from the log
       let lastError = ''
       try {
         const logContent = readFileSync(logFile, 'utf-8')
@@ -106,16 +117,11 @@ export default class Start extends Command {
         '  - The claude command is not found (check your PATH)',
       )
     }
+
     // Session survived — disable remain-on-exit so panes clean up normally
     tmux.disableRemainOnExit(sessionName)
 
-    log('')
-    log('Session started. Connect via:')
-    log(`  Web:      claude.ai/code → find session '${sessionName}'`)
-    log('  Terminal: clint attach')
-    log(`  QR code:  tmux attach -t ${sessionName}`)
-    if (telegramEnv) {
-      log('  Telegram: Message your HQ bot')
-    }
+    // Show welcome banner
+    this.log(renderBanner({config, sessionName, logFile}))
   }
 }

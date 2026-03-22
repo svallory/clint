@@ -1,307 +1,141 @@
-# Clint — TypeScript CLI Implementation Plan
+# Clint — UX Improvements Plan
 
 ## Context
 
-Clint is an always-running Claude Code command center. It runs as a persistent `claude remote-control` session in tmux, controllable via claude.ai/code and Telegram. It can spawn new Claude sessions for any project, with worktree support via the `wt` (worktrunk) tool.
+Clint works end-to-end (`bunx @svallory/clint start` → remote-control session alive), but the user experience has gaps:
+1. When run via `bunx`, the HQ Claude session can't easily invoke `clint` commands (not on PATH)
+2. The HQ session starts blind — no config summary, no orientation
+3. Users don't know where config lives or what's currently configured
 
-The current bash script at `bin/clint` will be replaced by a TypeScript CLI built with **oclif v4** and **bun**.
-
-### Key decisions made:
-- **Telegram**: Pre-created bot pool. User creates N bots via @BotFather, tokens stored in config. Each project gets a dedicated bot → separate chat.
-- **Project discovery**: Direct children of root are projects. Look recursively inside each project for worktrees (via `git worktree list` and `wt list`). Folders can be configured as "groups" to recurse into for nested projects.
-- **Session mode**: Every spawned session gets both remote-control + Telegram channel by default.
+This plan addresses 3 UX improvements: global install guidance, a welcome banner, and config visibility.
 
 ---
 
-## Phase 1: Scaffold oclif project
+## 1. Suggest global install when running via bunx
 
-### 1.1 — Initialize manually (don't use `oclif generate` — it forces npm)
+**Problem**: When the HQ Claude session tries to run `clint spawn ...`, it fails because `clint` isn't on PATH — the user ran it via `bunx` which doesn't install globally.
 
-**Files to create:**
+**Implementation**:
 
-`package.json`:
-```jsonc
-{
-  "name": "clint",
-  "version": "0.1.0",
-  "description": "Claude Code Command Center",
-  "type": "module",
-  "bin": { "clint": "./bin/run.js" },
-  "oclif": {
-    "bin": "clint",
-    "dirname": "clint",
-    "commands": { "strategy": "pattern", "target": "./dist/commands" },
-    "topicSeparator": " "
-  },
-  "scripts": {
-    "dev": "bun ./bin/dev.ts",
-    "build": "tsc",
-    "test": "bun test"
-  },
-  "dependencies": {
-    "@oclif/core": "^4",
-    "smol-toml": "^1"
-  },
-  "devDependencies": {
-    "@types/bun": "latest",
-    "typescript": "^5"
-  }
+In `src/commands/start.ts`, after setup and before launching the session, detect if `clint` is on PATH:
+
+```ts
+import { spawnSync } from 'node:child_process'
+
+function isClintOnPath(): boolean {
+  const result = spawnSync('which', ['clint'], { encoding: 'utf-8' })
+  return result.status === 0
 }
 ```
 
-`bin/dev.ts` — `#!/usr/bin/env bun` + oclif execute with `development: true`
-`bin/run.js` — `#!/usr/bin/env node` + oclif execute
-`tsconfig.json` — ESM, strict, outDir `./dist`, rootDir `./src`
+If not on PATH, show a suggestion:
 
-### 1.2 — Update `.gitignore`
+```
+Tip: Install Clint globally so the HQ session can manage projects:
 
-Add: `node_modules/`, `dist/`
+  npm install -g @svallory/clint
+  # or
+  bun install -g @svallory/clint
 
-### 1.3 — Update symlink
+Running via bunx works, but the HQ Claude session won't be able
+to run clint commands without a global install.
+```
 
-`~/.local/bin/clint` → `/Users/svallory/work/clint/bin/dev.ts` (for dev)
+Use `@clack/prompts` `p.log.warning()` for this — visible but non-blocking.
 
-### 1.4 — `bun install`
+**File**: `src/commands/start.ts`
 
 ---
 
-## Phase 2: Config system
+## 2. Welcome banner in CLAUDE.md
 
-**File**: `src/config/index.ts`, `src/config/schema.ts`
+**Problem**: The HQ Claude session starts with no context about what's configured, what projects are available, or what to do.
 
-Config location: `~/.config/clint/config.toml`
-Fallback/defaults in code (no default config file shipped).
+**Implementation**:
 
-```toml
-projects_root = "~/work"
+Update `CLAUDE.md` to instruct the HQ session to run `clint list --json` and `clint status --json` on startup and present a summary. But more importantly, generate a **dynamic startup script** that the HQ session runs.
 
-[hq]
-name = "clint-hq"
-spawn_mode = "same-dir"    # same-dir | worktree | session
-capacity = 32
+Better approach: instead of relying on CLAUDE.md instructions (which the AI may or may not follow), have `clint start` itself print the welcome banner to the user's terminal. The welcome shows:
 
-[claude]
-permission_mode = "default"
-
-[telegram]
-hq_bot_token = "..."       # REQUIRED for start — throw if missing
-
-[telegram.project_bots]
-# project_name = "bot_token"
-# myproject = "123:AAA..."
-
-[projects]
-# Override behavior for specific directories
-# [projects.g2i]
-# type = "group"  # recurse into subfolders as separate projects
+```
+╔══════════════════════════════════════════════════╗
+║  Clint HQ — Claude Code Command Center          ║
+╠══════════════════════════════════════════════════╣
+║                                                  ║
+║  Config:    ~/.config/clint/config.toml          ║
+║  Projects:  ~/work (4 projects)                  ║
+║  Logs:      ~/.config/clint/logs/                ║
+║  Telegram:  disabled                             ║
+║                                                  ║
+║  Session:   clint-hq (tmux)                      ║
+║  Connect:   claude.ai/code → clint-hq            ║
+║                                                  ║
+║  Commands:                                       ║
+║    clint list          List projects              ║
+║    clint spawn <name>  Start project session      ║
+║    clint status        Show running sessions      ║
+║    clint attach        Attach to HQ terminal      ║
+║    clint stop-all      Stop everything            ║
+║                                                  ║
+╚══════════════════════════════════════════════════╝
 ```
 
-**Rules:**
-- `telegram.hq_bot_token` — **must** throw if not set when `clint start` is called
-- Expand `~` in paths
-- Env var overrides: `CLINT_PROJECTS_ROOT`, `CLINT_HQ_BOT_TOKEN`
+This prints after the session starts successfully (after the `waitAndVerify` check passes).
+
+Also extract the bridge URL from the log and include it in the banner so the user gets a clickable link right in their terminal.
+
+**Files**: `src/commands/start.ts`, `src/utils/banner.ts` (new)
 
 ---
 
-## Phase 3: Core services
+## 3. Config visibility via `clint config` command
 
-### 3.1 — `src/services/tmux.ts`
+**Problem**: Users don't know where their config is, what's in it, or how to change it.
 
-Wraps tmux via `Bun.spawnSync()`:
-- `sessionExists(name)` → `tmux has-session -t name`
-- `createSession({name, cwd, command})` → `tmux new-session -d -s name -c cwd "command"`
-- `killSession(name)` → `tmux kill-session -t name`
-- `listSessions()` → `tmux list-sessions -F "..."` filtered by `clint-*` prefix
-- `attachSession(name)` → `execvp` into `tmux attach -t name`
+**Implementation**:
 
-### 3.2 — `src/services/claude.ts`
+Add a new `clint config` command that shows the current config:
 
-Builds the shell command string for launching Claude sessions.
+```
+$ clint config
 
-```ts
-function buildClaudeCommand(opts: {
-  name: string
-  spawnMode?: string
-  capacity?: number
-  permissionMode?: string
-  telegramBotToken?: string
-  telegramStateDir?: string
-  logFile: string
-}): string
+Config file: ~/.config/clint/config.toml
+
+  projects_root   ~/work
+  hq.name         clint-hq
+  hq.spawn_mode   same-dir
+  hq.capacity     32
+  claude.mode     default
+  telegram        disabled (no hq_bot_token)
+
+Edit: ~/.config/clint/config.toml
+Docs: https://clint.saulo.engineer/getting-started/configuration
 ```
 
-Output format:
-```bash
-TELEGRAM_BOT_TOKEN=<token> TELEGRAM_STATE_DIR=<dir> claude remote-control \
-  --name "<name>" --spawn <mode> --capacity <N> \
-  --channels plugin:telegram@claude-plugins-official \
-  2>&1 | tee -a <logFile>
-```
+Flags:
+- `--json` — output as JSON
+- `--path` — just print the config file path (useful for scripting: `$EDITOR $(clint config --path)`)
 
-Note: `--channels` is a top-level `claude` flag but IS accepted by the `remote-control` subcommand based on our testing (`claude --channels <x> remote-control` errors but `claude remote-control` with env vars works). The channels plugin reads from env vars set on the process.
-
-### 3.3 — `src/services/projects.ts`
-
-```ts
-interface Project {
-  name: string           // e.g. "rcl-tree-sitter" or "g2i/sheets-engine"
-  path: string           // absolute path
-  isGit: boolean
-  hasWorktrees: boolean  // >1 worktree detected
-  worktrees: Worktree[]
-}
-
-interface Worktree {
-  path: string
-  branch: string
-  isMain: boolean
-  isCurrent: boolean
-}
-```
-
-**Discovery algorithm:**
-1. List direct children of `projects_root`
-2. For each child:
-   - If config marks it as `type = "group"` → recurse, treat its children as projects
-   - Otherwise treat it as a single project
-3. For each project that has `.git`:
-   - Run `git worktree list --porcelain` to get worktrees
-   - If `wt` is available (check `which wt`), also try `wt list --format=json` for richer data (branch status, symbols, etc.)
-   - If >1 worktree OR main worktree is bare → `hasWorktrees = true`
-
-**Worktree creation:**
-- Use `wt switch -c <branch>` (run in project dir). `wt` handles the path template from user config.
-- Parse output to get the new worktree path.
-
-### 3.4 — `src/services/telegram.ts`
-
-Manages bot token assignment per session:
-
-```ts
-function getSessionTelegramEnv(opts: {
-  projectName: string
-  config: ClintConfig
-}): { TELEGRAM_BOT_TOKEN: string; TELEGRAM_STATE_DIR: string } | null
-```
-
-- Looks up `config.telegram.project_bots[projectName]`
-- If found: returns token + unique state dir (`~/.config/clint/telegram-state/<projectName>/`)
-- If not found: returns null (session runs without dedicated Telegram)
-- HQ always uses `config.telegram.hq_bot_token`
+**File**: `src/commands/config.ts` (new)
 
 ---
 
-## Phase 4: Commands
-
-### 4.1 — `src/commands/start.ts`
-
-Starts the HQ session.
-
-Flags: `--name`, `--spawn-mode`, `--permission-mode`, `--capacity`
-
-1. Load config, validate `hq_bot_token` exists
-2. Check `tmux.sessionExists()` — bail if running
-3. Build command via `buildClaudeCommand()` with HQ bot token
-4. `tmux.createSession()` in `/Users/svallory/work/clint`
-5. Log connection instructions
-
-### 4.2 — `src/commands/spawn.ts`
-
-Spawns a session for a project.
-
-Args: `PROJECT` (required)
-Flags: `--worktree <name>`, `--new-worktree <branch>`, `--permission-mode`, `--name`
-
-1. Resolve project path (name → `projects_root/name`, or absolute path)
-2. If `--new-worktree`: run `wt switch -c <branch>` in project dir, get new worktree path
-3. If `--worktree`: find worktree path from `wt list --format=json` or `git worktree list`
-4. Determine working directory (worktree path or project root)
-5. Session name: `clint-<project>` or `clint-<project>-<branch>`
-6. Get Telegram env vars (dedicated bot if available)
-7. Build command, create tmux session
-8. Print connection info
-
-### 4.3 — `src/commands/list.ts`
-
-Flags: `--root`, `--json`
-
-Calls `listProjects()`, displays table:
-```
-Projects (~/work)
-─────────────────
-  clint              (git)
-  containers
-  g2i                (git, 3 worktrees)
-    ├─ main          ~/work/g2i
-    ├─ feat-auth     ~/work/g2i.feat-auth
-    └─ fix-deploy    ~/work/g2i.fix-deploy
-  rcl-tree-sitter    (git)
-```
-
-### 4.4 — `src/commands/status.ts`
-
-Flags: `--json`
-
-Queries `tmux.listSessions()`, enriches with project info:
-```
-Clint Sessions
-══════════════
-  clint-hq            ONLINE   2026-03-21 13:40   (HQ)
-  clint-myproject     ONLINE   2026-03-21 14:00   ~/work/myproject
-```
-
-### 4.5 — `src/commands/stop.ts`
-
-Args: `SESSION` (optional, defaults to interactive picker if multiple)
-
-### 4.6 — `src/commands/stop-all.ts`
-
-Kills all `clint-*` tmux sessions.
-
-### 4.7 — `src/commands/attach.ts`
-
-Args: `SESSION` (optional, default HQ)
-
-Replaces process with `tmux attach -t <session>`.
-
----
-
-## Phase 5: CLAUDE.md for HQ session
-
-Update `/Users/svallory/work/clint/CLAUDE.md` so the HQ Claude instance knows:
-- On startup: use the Telegram `reply` tool to send "Clint HQ is online" to the paired chat
-- When user asks to open a session: run `bin/dev.ts spawn <project> [--worktree X]`
-- How to list projects: run `bin/dev.ts list --json`
-- How to check status: run `bin/dev.ts status`
-- Remind user to check claude.ai/code for the new remote-control session
-
----
-
-## Implementation order
+## Implementation Order
 
 | Step | What | Files |
 |------|------|-------|
-| 1 | Scaffold: package.json, tsconfig, bin scripts, bun install | `package.json`, `tsconfig.json`, `bin/dev.ts`, `bin/run.js`, `.gitignore` |
-| 2 | Config service | `src/config/schema.ts`, `src/config/index.ts` |
-| 3 | tmux service | `src/services/tmux.ts` |
-| 4 | Claude CLI builder | `src/services/claude.ts` |
-| 5 | `start` command (end-to-end HQ launch) | `src/commands/start.ts` |
-| 6 | `status` + `stop` + `stop-all` + `attach` | `src/commands/status.ts`, `stop.ts`, `stop-all.ts`, `attach.ts` |
-| 7 | Project discovery service | `src/services/projects.ts` |
-| 8 | `list` command | `src/commands/list.ts` |
-| 9 | Telegram bot pool service | `src/services/telegram.ts` |
-| 10 | `spawn` command | `src/commands/spawn.ts` |
-| 11 | Update CLAUDE.md | `CLAUDE.md` |
-| 12 | Tests | `test/` |
+| 1 | `clint config` command | `src/commands/config.ts` |
+| 2 | Welcome banner utility | `src/utils/banner.ts` |
+| 3 | Global install detection + banner in `start` | `src/commands/start.ts` |
+| 4 | Update CLAUDE.md with config command reference | `CLAUDE.md` |
 
 ---
 
 ## Verification
 
-1. **Scaffold**: `bun run dev -- --help` shows all commands
-2. **Start**: `bun run dev -- start` → tmux session created, verify with `tmux list-sessions | grep clint`
-3. **List**: `bun run dev -- list` → shows projects with worktree info matching `git worktree list` output
-4. **Spawn**: `bun run dev -- spawn rcl-tree-sitter` → new tmux session, visible in `clint status`
-5. **Telegram**: Attach to HQ (`clint attach`), verify QR/pairing shown, send test message from Telegram
-6. **Worktree spawn**: `bun run dev -- spawn rcl-tree-sitter --new-worktree feat-test` → `wt switch -c feat-test` runs, session starts in new worktree dir
-7. **Cleanup**: `bun run dev -- stop-all` kills all sessions
+1. `bun run dev -- config` → shows config summary
+2. `bun run dev -- config --path` → prints just the path
+3. `bun run dev -- config --json` → JSON output
+4. `bun run dev -- start` (without global install) → shows install suggestion
+5. `bun run dev -- start` (with config) → shows welcome banner with projects count, session name, connection info
+6. Test in sandbox: `mkdir sandbox/work/proj && CLINT_PROJECTS_ROOT=... bun run dev -- start` → full flow
