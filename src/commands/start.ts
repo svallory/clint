@@ -1,5 +1,6 @@
 import {Command, Flags} from '@oclif/core'
-import {mkdirSync} from 'node:fs'
+import {existsSync, mkdirSync, readFileSync} from 'node:fs'
+import {homedir} from 'node:os'
 import {resolve} from 'node:path'
 import {runSetupIfNeeded} from '../config/setup.js'
 import {buildClaudeCommand} from '../services/claude.js'
@@ -41,6 +42,20 @@ export default class Start extends Command {
     const capacity = flags.capacity ?? config.hq.capacity
     const permissionMode = flags['permission-mode'] ?? config.claude.permission_mode
 
+    // Check workspace trust
+    const encoded = config.projects_root.replace(/\//g, '-')
+    const trustedDir = resolve(homedir(), '.claude/projects', encoded)
+    if (!existsSync(trustedDir)) {
+      this.error(
+        `Workspace not trusted by Claude Code: ${config.projects_root}\n\n` +
+        'Claude Code requires you to trust a directory before it can run there.\n' +
+        'Run this once to trust it:\n\n' +
+        `  cd ${config.projects_root} && claude\n\n` +
+        'Accept the trust dialog, then exit (Ctrl+C) and run clint start again.\n' +
+        'Or re-run setup to pick a different directory: rm ~/.config/clint/config.toml && clint start',
+      )
+    }
+
     if (tmux.sessionExists(sessionName)) {
       log(`Session '${sessionName}' is already running. Use 'clint attach' to connect.`)
       return
@@ -78,12 +93,24 @@ export default class Start extends Command {
 
     // Verify the session actually survived startup
     if (tmux.waitAndVerify(sessionName) === 'dead') {
+      // Try to extract the actual error from the log
+      let lastError = ''
+      try {
+        const logContent = readFileSync(logFile, 'utf-8')
+        const errorLines = logContent.split('\n').filter((l) => l.startsWith('Error:'))
+        if (errorLines.length > 0) {
+          lastError = `\nLast error from log:\n  ${errorLines[errorLines.length - 1]}\n`
+        }
+      } catch {}
+
       this.error(
         `Session '${sessionName}' exited immediately after starting.\n` +
-        `Check the log for details: ${logFile}\n\n` +
+        `${lastError}\n` +
+        `Full log: ${logFile}\n\n` +
         'Common causes:\n' +
         '  - Remote Control is not enabled on your account\n' +
         '  - Claude CLI is not authenticated (run: claude auth login)\n' +
+        '  - Workspace not trusted (run: cd <dir> && claude)\n' +
         '  - The claude command is not found (check your PATH)',
       )
     }

@@ -1,6 +1,6 @@
 {
   "name": "@svallory/clint",
-  "version": "0.2.1",
+  "version": "0.3.0",
   "description": "Claude Code Command Center — calm, decisive, always in control",
   "type": "module",
   "license": "MIT",
